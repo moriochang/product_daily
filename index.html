@@ -190,6 +190,46 @@
             color: #666;
             margin-top: 5px;
         }
+
+        .top3-container {
+            margin-top: 40px;
+        }
+
+        .top3-category-title {
+            color: #1e3c72;
+            font-size: 20px;
+            margin-bottom: 15px;
+            border-bottom: 2px solid #ccc;
+            padding-bottom: 5px;
+        }
+
+        .top3-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 10px 0;
+            border-bottom: 1px dashed #eee;
+            font-size: 16px;
+        }
+
+        .top3-item:last-child {
+            border-bottom: none;
+        }
+
+        .top3-rank {
+            font-weight: bold;
+            color: #2a5298;
+            width: 30px;
+            text-align: left;
+        }
+
+        .top3-name {
+            flex-grow: 1;
+        }
+
+        .top3-quantity {
+            font-weight: bold;
+            color: #dc3545;
+        }
     </style>
 </head>
 <body>
@@ -233,6 +273,9 @@
                 <div class="category-name">周邊業績總計</div>
                 <div class="category-quantity" id="accessoriesTotalQuantity">$0</div>
             </div>
+
+            <h2 style="margin-bottom: 20px; margin-top: 40px; color: #1e3c72;">🏆 中分類 Quantity Top 3 排名</h2>
+            <div id="top3Container"></div>
         </div>
 
         <div class="debug-section" id="debugSection">
@@ -242,7 +285,7 @@
     </div>
 
     <script>
-        let codeCategoryMap = null;
+        let codeCategoryMap = null; // { code: { category: '大分類', subCategory: '中分類' } }
         let debugMessages = [];
 
         const githubUrl = document.getElementById('githubUrl');
@@ -255,6 +298,7 @@
         const categoriesContainer = document.getElementById('categoriesContainer');
         const accessoriesContainer = document.getElementById('accessoriesContainer');
         const accessoriesTotalQuantity = document.getElementById('accessoriesTotalQuantity');
+        const top3Container = document.getElementById('top3Container');
         const debugSection = document.getElementById('debugSection');
         const debugContent = document.getElementById('debugContent');
 
@@ -296,13 +340,17 @@
                 data.forEach(row => {
                     const code = String(row.Code || '').trim();
                     const category = String(row['大分類'] || '').trim();
-                    if (code && category) {
-                        codeCategoryMap[code] = category;
+                    const subCategory = String(row['中分類'] || '').trim(); // 新增：讀取中分類
+                    if (code && category && subCategory) {
+                        codeCategoryMap[code] = {
+                            category: category,
+                            subCategory: subCategory
+                        };
                     }
                 });
                 
                 addDebug(`✅ 參照資料載入完成: ${Object.keys(codeCategoryMap).length.toLocaleString()} 個產品代碼`);
-                const categories = [...new Set(Object.values(codeCategoryMap))];
+                const categories = [...new Set(Object.values(codeCategoryMap).map(item => item.category))];
                 addDebug(`📂 大分類: ${categories.join(', ')}`);
                 
                 loading.style.display = 'none';
@@ -445,16 +493,15 @@
                     return;
                 }
 
-                // --- 修改：將 AirPods 從產品數量統計移到周邊業績統計 (amt) ---
-                // 產品數量統計（用 quantity）
+                // 大分類定義
                 const productCategories = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'Care']; 
-                // 周邊業績統計（用 amt）
                 const accessoryCategories = ['3rd Party', 'Accy', 'Audio', 'AirPods']; 
-                // --- 結束修改 ---
+                const top3Categories = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'Accy']; // 需要做 Top 3 排名的類別
 
                 const categoryStats = {};
                 const accessoryStats = {};
-                
+                const subCategoryStats = {}; // 新增：中分類 Quantity 統計
+
                 productCategories.forEach(cat => categoryStats[cat] = 0);
                 accessoryCategories.forEach(cat => accessoryStats[cat] = 0);
 
@@ -471,23 +518,34 @@
                         return;
                     }
 
-                    const category = codeCategoryMap[productCode];
+                    const categoryData = codeCategoryMap[productCode];
 
-                    if (category) {
+                    if (categoryData) {
                         matchedCount++;
-                        
-                        // --- 修改：處理分類統計邏輯 ---
+                        const category = categoryData.category;
+                        const subCategory = categoryData.subCategory;
+
                         if (productCategories.includes(category)) {
                             // 核心產品計數量
                             categoryStats[category] += quantity;
                         } else if (accessoryCategories.includes(category)) {
-                            // 周邊產品計金額 (AirPods也在此處統計 amt)
+                            // 周邊產品計金額 (包含 AirPods)
                             accessoryStats[category] += amt;
                         }
-                        // --- 結束修改 ---
-                        
+
+                        // 新增：Top 3 中分類 Quantity 統計邏輯
+                        if (top3Categories.includes(category)) {
+                            if (!subCategoryStats[category]) {
+                                subCategoryStats[category] = {};
+                            }
+                            if (!subCategoryStats[category][subCategory]) {
+                                subCategoryStats[category][subCategory] = 0;
+                            }
+                            subCategoryStats[category][subCategory] += quantity;
+                        }
+
                         if (index < 5) {
-                            addDebug(`✓ 第 ${index + 1} 筆: ${productCode} → ${category} (數量: ${quantity}, 金額: ${amt})`);
+                            addDebug(`✓ 第 ${index + 1} 筆: ${productCode} → ${category}/${subCategory} (數量: ${quantity}, 金額: ${amt})`);
                         }
                     } else {
                         unmatchedCount++;
@@ -509,7 +567,7 @@
                     addDebug(`\n未匹配的產品代碼: ${unmatchedCodes.join(', ')}`);
                 }
 
-                displayResults(categoryStats, accessoryStats, productCategories, accessoryCategories);
+                displayResults(categoryStats, accessoryStats, subCategoryStats, productCategories, accessoryCategories, top3Categories);
             } catch (err) {
                 showError('處理資料時發生錯誤: ' + err.message);
                 addDebug(`❌ 錯誤: ${err.message}`);
@@ -517,7 +575,31 @@
             }
         }
 
-        function displayResults(productStats, accessoryStats, productCategories, accessoryCategories) {
+        function renderTop3(category, stats) {
+            const items = Object.entries(stats)
+                .map(([name, quantity]) => ({ name, quantity }))
+                .sort((a, b) => b.quantity - a.quantity)
+                .slice(0, 3);
+
+            let html = `<div class="top3-category-title">${category}</div>`;
+            if (items.length === 0) {
+                html += `<p style="color:#666; padding-left:10px;">無 ${category} 相關銷售資料</p>`;
+            } else {
+                items.forEach((item, index) => {
+                    html += `
+                        <div class="top3-item">
+                            <span class="top3-rank">${index + 1}.</span>
+                            <span class="top3-name">${item.name}</span>
+                            <span class="top3-quantity">${Math.round(item.quantity).toLocaleString()}</span>
+                        </div>
+                    `;
+                });
+            }
+            
+            return `<div class="top3-card">${html}</div>`;
+        }
+
+        function displayResults(productStats, accessoryStats, subCategoryStats, productCategories, accessoryCategories, top3Categories) {
             categoriesContainer.innerHTML = '';
 
             productCategories.forEach(category => {
@@ -543,16 +625,26 @@
                 card.className = 'category-card';
                 card.innerHTML = `
                     <div class="category-name">${category}</div>
-                    <div class="category-quantity">${Math.round(amount).toLocaleString()}</div>
+                    <div class="category-quantity">$${Math.round(amount).toLocaleString()}</div>
                 `;
                 accessoriesContainer.appendChild(card);
             });
 
-            // 周邊業績總計現在包含 AirPods 的金額
             accessoriesTotalQuantity.textContent = `$${Math.round(accessoryTotal).toLocaleString()}`;
+            
+            // 渲染 Top 3
+            top3Container.innerHTML = '';
+            top3Categories.forEach(category => {
+                const stats = subCategoryStats[category] || {};
+                const top3Html = renderTop3(category, stats);
+                const wrapper = document.createElement('div');
+                wrapper.innerHTML = top3Html;
+                top3Container.appendChild(wrapper.firstChild);
+            });
 
             results.classList.add('show');
 
+            // Debug 輸出
             addDebug(`\n📊 產品數量統計:`);
             productCategories.forEach(category => {
                 addDebug(`${category}: ${Math.round(productStats[category] || 0).toLocaleString()}`);
@@ -563,6 +655,24 @@
                 addDebug(`${category}: ${Math.round(accessoryStats[category] || 0).toLocaleString()}`);
             });
             addDebug(`周邊業績總計: ${Math.round(accessoryTotal).toLocaleString()}`);
+            
+            addDebug(`\n🏆 中分類 Quantity Top 3 統計:`);
+            top3Categories.forEach(category => {
+                const stats = subCategoryStats[category] || {};
+                const items = Object.entries(stats)
+                    .map(([name, quantity]) => ({ name, quantity }))
+                    .sort((a, b) => b.quantity - a.quantity)
+                    .slice(0, 3);
+                
+                addDebug(`-- ${category} --`);
+                if (items.length > 0) {
+                    items.forEach((item, index) => {
+                        addDebug(`${index + 1}. ${item.name}: ${Math.round(item.quantity).toLocaleString()}`);
+                    });
+                } else {
+                    addDebug(`無資料`);
+                }
+            });
         }
 
         function showError(message) {
