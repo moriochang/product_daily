@@ -522,7 +522,7 @@
                     addDebug(`\n未匹配的產品代碼: ${unmatchedCodes.join(', ')}`);
                 }
 
-                displayResults(categoryStats, accessoryStats, top3Stats, productCategories, accessoryCategories, top3Categories);
+                displayResults(categoryStats, accessoryStats, top3Stats, ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'AirPods', 'Care'], ['3rd Party', 'Accy', 'Audio', 'AirPods'], ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'Accy']);
             } catch (err) {
                 showError('處理資料時發生錯誤: ' + err.message);
                 addDebug(`❌ 錯誤: ${err.message}`);
