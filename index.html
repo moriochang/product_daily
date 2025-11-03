@@ -445,8 +445,12 @@
                     return;
                 }
 
-                const productCategories = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'AirPods', 'Care'];
-                const accessoryCategories = ['3rd Party', 'Accy', 'Audio'];
+                // --- 修改：將 AirPods 從產品數量統計移到周邊業績統計 (amt) ---
+                // 產品數量統計（用 quantity）
+                const productCategories = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'Care']; 
+                // 周邊業績統計（用 amt）
+                const accessoryCategories = ['3rd Party', 'Accy', 'Audio', 'AirPods']; 
+                // --- 結束修改 ---
 
                 const categoryStats = {};
                 const accessoryStats = {};
@@ -472,11 +476,15 @@
                     if (category) {
                         matchedCount++;
                         
+                        // --- 修改：處理分類統計邏輯 ---
                         if (productCategories.includes(category)) {
+                            // 核心產品計數量
                             categoryStats[category] += quantity;
                         } else if (accessoryCategories.includes(category)) {
+                            // 周邊產品計金額 (AirPods也在此處統計 amt)
                             accessoryStats[category] += amt;
                         }
+                        // --- 結束修改 ---
                         
                         if (index < 5) {
                             addDebug(`✓ 第 ${index + 1} 筆: ${productCode} → ${category} (數量: ${quantity}, 金額: ${amt})`);
@@ -540,7 +548,8 @@
                 accessoriesContainer.appendChild(card);
             });
 
-            accessoriesTotalQuantity.textContent = `${Math.round(accessoryTotal).toLocaleString()}`;
+            // 周邊業績總計現在包含 AirPods 的金額
+            accessoriesTotalQuantity.textContent = `$${Math.round(accessoryTotal).toLocaleString()}`;
 
             results.classList.add('show');
 
