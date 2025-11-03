@@ -137,11 +137,19 @@
             font-size: 32px;
             font-weight: bold;
         }
-
-        /* 🎯 修改 1: 周邊業績總計 字體增大 5px */
+        
+        /* 【修改 3: 周邊業績總計文字放大】 */
+        /* 保持數字大小 32px 不變 */
         #accessoriesTotalQuantity {
-            font-size: 37px; /* 原本 32px + 5px */
+            font-size: 32px; 
             font-weight: bold;
+        }
+
+        /* 增大 "周邊業績總計" 的文字大小 */
+        .total-card > .category-name {
+            font-size: 24px; /* 增大文字字體 */
+            font-weight: bold;
+            margin-bottom: 0;
         }
 
         .debug-section {
@@ -197,7 +205,7 @@
             margin-top: 5px;
         }
 
-        /* 🎯 修改 2: Top 3 排名版面美化 */
+        /* Top 3 排名版面美化 */
         .top3-container {
             margin-top: 40px;
             display: grid;
@@ -305,12 +313,13 @@
             <h2 style="margin-bottom: 20px; margin-top: 40px; color: #1e3c72;">🔌 周邊業績統計</h2>
             <div class="stats-grid" id="accessoriesContainer"></div>
             <div class="total-card" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 25px; border-radius: 12px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(30, 60, 114, 0.3);">
-                <div class="category-name">周邊業績總計</div>
+                <div class="category-name">周邊業績總計</div> 
                 <div id="accessoriesTotalQuantity">$0</div>
             </div>
 
-            <h2 style="margin-bottom: 20px; margin-top: 40px; color: #1e3c72;">🏆 中分類 Quantity Top 3 排名</h2>
-            <div id="top3Container" class="top3-container"></div> </div>
+            <h2 style="margin-bottom: 20px; margin-top: 40px; color: #1e3c72;">🏆 各分類 Top 3</h2>
+            <div id="top3Container" class="top3-container"></div>
+        </div>
 
         <div class="debug-section" id="debugSection">
             <div class="debug-title">🔍 除錯資訊</div>
@@ -530,7 +539,8 @@
                 // 大分類定義
                 const productCategories = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'Care']; 
                 const accessoryCategories = ['3rd Party', 'Accy', 'Audio', 'AirPods']; 
-                const top3Categories = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'Accy']; // 需要做 Top 3 排名的類別
+                // 【修改 2: 新增 3rd Party 到 Top 3 排名】
+                const top3Categories = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'Accy', '3rd Party']; 
 
                 const categoryStats = {};
                 const accessoryStats = {};
@@ -567,7 +577,7 @@
                             accessoryStats[category] += amt;
                         }
 
-                        // Top 3 中分類 Quantity 統計邏輯 (無論產品屬性，都以 quantity 排名)
+                        // Top 3 中分類 Quantity 統計邏輯
                         if (top3Categories.includes(category)) {
                             if (!subCategoryStats[category]) {
                                 subCategoryStats[category] = {};
@@ -615,7 +625,7 @@
                 .sort((a, b) => b.quantity - a.quantity)
                 .slice(0, 3);
 
-            let html = `<div class="top3-category-title">${category}</div>`;
+            let html = `<div class="top3-category-title">${category} Top 3</div>`;
             if (items.length === 0) {
                 html += `<p style="color:#666; padding-left:10px;">無 ${category} 相關銷售資料</p>`;
             } else {
@@ -695,7 +705,7 @@
             });
             addDebug(`周邊業績總計: ${Math.round(accessoryTotal).toLocaleString()}`);
             
-            addDebug(`\n🏆 中分類 Quantity Top 3 統計:`);
+            addDebug(`\n🏆 各分類 Top 3 統計:`);
             top3Categories.forEach(category => {
                 const stats = subCategoryStats[category] || {};
                 const items = Object.entries(stats)
