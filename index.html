@@ -127,14 +127,6 @@
             box-shadow: 0 4px 15px rgba(30, 60, 114, 0.3);
         }
 
-        .top3-card {
-            background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-            color: white;
-            padding: 20px;
-            border-radius: 12px;
-            box-shadow: 0 4px 15px rgba(243, 156, 18, 0.3);
-        }
-
         .category-name {
             font-size: 16px;
             font-weight: bold;
@@ -239,11 +231,8 @@
             <div class="stats-grid" id="accessoriesContainer"></div>
             <div class="total-card" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 25px; border-radius: 12px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(30, 60, 114, 0.3);">
                 <div class="category-name" style="font-size: 20px;">周邊業績總計</div>
-                <div class="category-quantity" id="accessoriesTotalQuantity" style="font-size: 40px;">$0</div>
+                <div class="category-quantity" style="font-size: 40px;" id="accessoriesTotalQuantity">$0</div>
             </div>
-
-            <h2 style="margin-bottom: 20px; margin-top: 40px; color: #1e3c72;">🏆 中分類銷量 Top 3</h2>
-            <div class="stats-grid" id="top3Container"></div>
         </div>
 
         <div class="debug-section" id="debugSection">
@@ -266,7 +255,6 @@
         const categoriesContainer = document.getElementById('categoriesContainer');
         const accessoriesContainer = document.getElementById('accessoriesContainer');
         const accessoriesTotalQuantity = document.getElementById('accessoriesTotalQuantity');
-        const top3Container = document.getElementById('top3Container');
         const debugSection = document.getElementById('debugSection');
         const debugContent = document.getElementById('debugContent');
 
@@ -458,16 +446,13 @@
                 }
 
                 const productCategories = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'AirPods', 'Care'];
-                const accessoryCategories = ['3rd Party', 'Accy', 'Audio', 'AirPods'];
-                const top3Categories = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'Accy'];
+                const accessoryCategories = ['3rd Party', 'Accy', 'Audio'];
 
                 const categoryStats = {};
                 const accessoryStats = {};
-                const top3Stats = {};
                 
                 productCategories.forEach(cat => categoryStats[cat] = 0);
                 accessoryCategories.forEach(cat => accessoryStats[cat] = 0);
-                top3Categories.forEach(cat => top3Stats[cat] = 0);
 
                 let matchedCount = 0;
                 let unmatchedCount = 0;
@@ -489,14 +474,8 @@
                         
                         if (productCategories.includes(category)) {
                             categoryStats[category] += quantity;
-                        }
-                        
-                        if (accessoryCategories.includes(category)) {
+                        } else if (accessoryCategories.includes(category)) {
                             accessoryStats[category] += amt;
-                        }
-                        
-                        if (top3Categories.includes(category)) {
-                            top3Stats[category] += quantity;
                         }
                         
                         if (index < 5) {
@@ -522,7 +501,7 @@
                     addDebug(`\n未匹配的產品代碼: ${unmatchedCodes.join(', ')}`);
                 }
 
-                displayResults(categoryStats, accessoryStats, top3Stats, ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'AirPods', 'Care'], ['3rd Party', 'Accy', 'Audio', 'AirPods'], ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'Accy']);
+                displayResults(categoryStats, accessoryStats, productCategories, accessoryCategories);
             } catch (err) {
                 showError('處理資料時發生錯誤: ' + err.message);
                 addDebug(`❌ 錯誤: ${err.message}`);
