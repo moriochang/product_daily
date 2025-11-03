@@ -17,18 +17,17 @@
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             min-height: 100vh;
             padding: 20px;
-            display: flex; /* 使用 Flexbox 讓 Footer 保持在最下方 */
-            flex-direction: column;
+            /* 🎯 版面還原: 移除 Flexbox 相關設定 */
         }
 
         .container {
             max-width: 1000px;
-            margin: 0 auto 20px auto; /* 底部留出空間給 Footer */
+            margin: 0 auto; /* 🎯 版面還原: 底部邊距已移除 */
             background: white;
             border-radius: 20px;
             padding: 40px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
-            flex-grow: 1; /* 讓容器佔據剩餘空間 */
+            /* 🎯 版面還原: 移除 flex-grow */
         }
 
         h1 {
@@ -276,9 +275,9 @@
             border-radius: 5px;
         }
 
-        /* 🎯 新增 Footer 樣式 */
+        /* Footer 樣式 */
         .footer {
-            margin-top: auto; /* 讓 Footer 緊貼底部 */
+            margin-top: 20px; /* 加上邊距 */
             padding: 10px 0;
             text-align: center;
             color: rgba(255, 255, 255, 0.7); /* 淺白色文字，與背景融合 */
@@ -339,7 +338,7 @@
     </div>
     
     <footer class="footer">
-        Created by Morio © 2025
+        created by Morio © 2025
     </footer>
     <script>
         let codeCategoryMap = null; // { code: { category: '大分類', subCategory: '中分類' } }
