@@ -138,6 +138,12 @@
             font-weight: bold;
         }
 
+        /* 🎯 修改 1: 周邊業績總計 字體增大 5px */
+        #accessoriesTotalQuantity {
+            font-size: 37px; /* 原本 32px + 5px */
+            font-weight: bold;
+        }
+
         .debug-section {
             margin-top: 30px;
             padding: 20px;
@@ -191,44 +197,73 @@
             margin-top: 5px;
         }
 
+        /* 🎯 修改 2: Top 3 排名版面美化 */
         .top3-container {
             margin-top: 40px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* 使用 Grid 排版 */
+            gap: 20px;
+        }
+
+        .top3-card {
+            background: #ffffff;
+            border: 1px solid #e0e0e0;
+            border-radius: 12px;
+            padding: 20px;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.08);
+            transition: transform 0.2s;
+        }
+
+        .top3-card:hover {
+            transform: translateY(-3px);
+            box-shadow: 0 6px 15px rgba(0, 0, 0, 0.12);
         }
 
         .top3-category-title {
             color: #1e3c72;
             font-size: 20px;
+            font-weight: bold;
             margin-bottom: 15px;
-            border-bottom: 2px solid #ccc;
-            padding-bottom: 5px;
+            border-bottom: 3px solid #f0f4f8; /* 淺色分隔線 */
+            padding-bottom: 8px;
         }
 
         .top3-item {
             display: flex;
             justify-content: space-between;
-            padding: 10px 0;
-            border-bottom: 1px dashed #eee;
+            align-items: center;
+            padding: 12px 0;
+            border-bottom: 1px dashed #e0e0e0;
             font-size: 16px;
         }
+
+        .top3-item:nth-child(2) .top3-rank { color: #FFD700; /* 金色 */ }
+        .top3-item:nth-child(3) .top3-rank { color: #C0C0C0; /* 銀色 */ }
+        .top3-item:nth-child(4) .top3-rank { color: #CD7F32; /* 銅色 */ }
 
         .top3-item:last-child {
             border-bottom: none;
         }
 
         .top3-rank {
-            font-weight: bold;
-            color: #2a5298;
+            font-weight: 900;
+            font-size: 1.2em;
             width: 30px;
             text-align: left;
+            color: #2a5298;
         }
 
         .top3-name {
             flex-grow: 1;
+            padding-left: 10px;
         }
 
         .top3-quantity {
             font-weight: bold;
             color: #dc3545;
+            background-color: #ffe8eb;
+            padding: 4px 8px;
+            border-radius: 5px;
         }
     </style>
 </head>
@@ -271,12 +306,11 @@
             <div class="stats-grid" id="accessoriesContainer"></div>
             <div class="total-card" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 25px; border-radius: 12px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(30, 60, 114, 0.3);">
                 <div class="category-name">周邊業績總計</div>
-                <div class="category-quantity" id="accessoriesTotalQuantity">$0</div>
+                <div id="accessoriesTotalQuantity">$0</div>
             </div>
 
             <h2 style="margin-bottom: 20px; margin-top: 40px; color: #1e3c72;">🏆 中分類 Quantity Top 3 排名</h2>
-            <div id="top3Container"></div>
-        </div>
+            <div id="top3Container" class="top3-container"></div> </div>
 
         <div class="debug-section" id="debugSection">
             <div class="debug-title">🔍 除錯資訊</div>
@@ -340,7 +374,7 @@
                 data.forEach(row => {
                     const code = String(row.Code || '').trim();
                     const category = String(row['大分類'] || '').trim();
-                    const subCategory = String(row['中分類'] || '').trim(); // 新增：讀取中分類
+                    const subCategory = String(row['中分類'] || '').trim(); // 讀取中分類
                     if (code && category && subCategory) {
                         codeCategoryMap[code] = {
                             category: category,
@@ -500,7 +534,7 @@
 
                 const categoryStats = {};
                 const accessoryStats = {};
-                const subCategoryStats = {}; // 新增：中分類 Quantity 統計
+                const subCategoryStats = {}; 
 
                 productCategories.forEach(cat => categoryStats[cat] = 0);
                 accessoryCategories.forEach(cat => accessoryStats[cat] = 0);
@@ -533,7 +567,7 @@
                             accessoryStats[category] += amt;
                         }
 
-                        // 新增：Top 3 中分類 Quantity 統計邏輯
+                        // Top 3 中分類 Quantity 統計邏輯 (無論產品屬性，都以 quantity 排名)
                         if (top3Categories.includes(category)) {
                             if (!subCategoryStats[category]) {
                                 subCategoryStats[category] = {};
@@ -586,8 +620,13 @@
                 html += `<p style="color:#666; padding-left:10px;">無 ${category} 相關銷售資料</p>`;
             } else {
                 items.forEach((item, index) => {
+                    // 使用 index + 2, index + 3 來觸發 CSS 樣式
+                    const rankClass = index === 0 ? 'top3-item gold' : 
+                                      index === 1 ? 'top3-item silver' : 
+                                      index === 2 ? 'top3-item bronze' : 'top3-item';
+
                     html += `
-                        <div class="top3-item">
+                        <div class="${rankClass}">
                             <span class="top3-rank">${index + 1}.</span>
                             <span class="top3-name">${item.name}</span>
                             <span class="top3-quantity">${Math.round(item.quantity).toLocaleString()}</span>
