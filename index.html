@@ -224,14 +224,14 @@
         <div class="error" id="error"></div>
 
         <div class="results" id="results">
-            <h2 style="margin-bottom: 20px; color: #1e3c72;">📦 產品數量統計</h2>
+            <h2 style="margin-bottom: 20px; color: #1e3c72;">📈 產品數量統計</h2>
             <div class="stats-grid" id="categoriesContainer"></div>
 
             <h2 style="margin-bottom: 20px; margin-top: 40px; color: #1e3c72;">🔌 周邊業績統計</h2>
             <div class="stats-grid" id="accessoriesContainer"></div>
             <div class="total-card" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 25px; border-radius: 12px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(30, 60, 114, 0.3);">
-                <div class="category-name" style="font-size: 20px;">周邊業績總計</div>
-                <div class="category-quantity" style="font-size: 40px;" id="accessoriesTotalQuantity">$0</div>
+                <div class="category-name">周邊業績總計</div>
+                <div class="category-quantity" id="accessoriesTotalQuantity">$0</div>
             </div>
         </div>
 
@@ -254,7 +254,6 @@
         const results = document.getElementById('results');
         const categoriesContainer = document.getElementById('categoriesContainer');
         const accessoriesContainer = document.getElementById('accessoriesContainer');
-        const accessoriesTotalQuantity = document.getElementById('accessoriesTotalQuantity');
         const debugSection = document.getElementById('debugSection');
         const debugContent = document.getElementById('debugContent');
 
@@ -473,7 +472,7 @@
                         matchedCount++;
                         
                         if (productCategories.includes(category)) {
-                            categoryStats[category] += quantity;
+                            categoryStats[category] += amt;
                         } else if (accessoryCategories.includes(category)) {
                             accessoryStats[category] += amt;
                         }
@@ -513,47 +512,42 @@
             categoriesContainer.innerHTML = '';
 
             productCategories.forEach(category => {
-                const quantity = productStats[category] || 0;
+                const amount = productStats[category] || 0;
                 
                 const card = document.createElement('div');
                 card.className = 'category-card';
                 card.innerHTML = `
                     <div class="category-name">${category}</div>
-                    <div class="category-quantity">${Math.round(quantity).toLocaleString()}</div>
+                    <div class="category-quantity">$${Math.round(amount).toLocaleString()}</div>
                 `;
                 categoriesContainer.appendChild(card);
             });
 
             accessoriesContainer.innerHTML = '';
-            let accessoryTotal = 0;
 
             accessoryCategories.forEach(category => {
                 const amount = accessoryStats[category] || 0;
-                accessoryTotal += amount;
                 
                 const card = document.createElement('div');
                 card.className = 'category-card';
                 card.innerHTML = `
                     <div class="category-name">${category}</div>
-                    <div class="category-quantity">${Math.round(amount).toLocaleString()}</div>
+                    <div class="category-quantity">$${Math.round(amount).toLocaleString()}</div>
                 `;
                 accessoriesContainer.appendChild(card);
             });
 
-            accessoriesTotalQuantity.textContent = `${Math.round(accessoryTotal).toLocaleString()}`;
-
             results.classList.add('show');
 
-            addDebug(`\n📊 產品數量統計:`);
+            addDebug(`\n📊 產品數量統計 amt:`);
             productCategories.forEach(category => {
-                addDebug(`${category}: ${Math.round(productStats[category] || 0).toLocaleString()}`);
+                addDebug(`${category}: $${Math.round(productStats[category] || 0).toLocaleString()}`);
             });
 
-            addDebug(`\n🔌 周邊業績統計:`);
+            addDebug(`\n🛍️ 周邊業績統計:`);
             accessoryCategories.forEach(category => {
-                addDebug(`${category}: ${Math.round(accessoryStats[category] || 0).toLocaleString()}`);
+                addDebug(`${category}: $${Math.round(accessoryStats[category] || 0).toLocaleString()}`);
             });
-            addDebug(`周邊業績總計: ${Math.round(accessoryTotal).toLocaleString()}`);
         }
 
         function showError(message) {
