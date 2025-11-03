@@ -138,8 +138,7 @@
             font-weight: bold;
         }
         
-        /* 【修改 3: 周邊業績總計文字放大】 */
-        /* 保持數字大小 32px 不變 */
+        /* 周邊業績總計數字大小 */
         #accessoriesTotalQuantity {
             font-size: 32px; 
             font-weight: bold;
@@ -539,7 +538,7 @@
                 // 大分類定義
                 const productCategories = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'Care']; 
                 const accessoryCategories = ['3rd Party', 'Accy', 'Audio', 'AirPods']; 
-                // 【修改 2: 新增 3rd Party 到 Top 3 排名】
+                // Top 3 排名類別 (包含 3rd Party)
                 const top3Categories = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'Accy', '3rd Party']; 
 
                 const categoryStats = {};
@@ -619,13 +618,14 @@
             }
         }
 
+        // 【修改 4: 移除 renderTop3 函式中的 " Top 3" 文字】
         function renderTop3(category, stats) {
             const items = Object.entries(stats)
                 .map(([name, quantity]) => ({ name, quantity }))
                 .sort((a, b) => b.quantity - a.quantity)
                 .slice(0, 3);
 
-            let html = `<div class="top3-category-title">${category} Top 3</div>`;
+            let html = `<div class="top3-category-title">${category}</div>`; // 僅保留 category 名稱
             if (items.length === 0) {
                 html += `<p style="color:#666; padding-left:10px;">無 ${category} 相關銷售資料</p>`;
             } else {
