@@ -162,6 +162,7 @@
             padding: 20px;
             background: #f5f5f5;
             border-radius: 12px;
+            display: none;  /* 隱藏除錯資訊 */
         }
 
         .debug-title {
@@ -184,6 +185,7 @@
             padding: 20px;
             border-radius: 12px;
             margin-bottom: 20px;
+            display: none;  /* 隱藏設定區域 */
         }
 
         .config-label {
@@ -233,7 +235,7 @@
             <div class="upload-text">點擊上傳或拖曳 Excel 檔案到這裡</div>
             <div class="upload-text" style="font-size: 14px; color: #999;">支援 .xlsx, .xls, .csv 格式</div>
             <div class="upload-text" style="font-size: 12px; color: #999; margin-top: 10px;">
-                需包含 product_code 和 Quantity 欄位
+                需包含 product_code 和 amt 欄位
             </div>
             <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
         </div>
@@ -242,11 +244,18 @@
         <div class="error" id="error"></div>
 
         <div class="results" id="results">
-            <h2 style="margin-bottom: 20px; color: #333;">📈 統計結果</h2>
+            <h2 style="margin-bottom: 20px; color: #333;">📈 產品業績統計</h2>
             <div class="stats-grid" id="categoriesContainer"></div>
             <div class="total-card">
-                <div class="category-name">總計</div>
+                <div class="category-name">產品業績總計</div>
                 <div class="category-quantity" id="totalQuantity">0</div>
+            </div>
+
+            <h2 style="margin-bottom: 20px; margin-top: 40px; color: #333;">🛍️ 周邊業績統計</h2>
+            <div class="stats-grid" id="accessoriesContainer"></div>
+            <div class="total-card">
+                <div class="category-name">周邊業績總計</div>
+                <div class="category-quantity" id="accessoriesTotalQuantity">0</div>
             </div>
         </div>
 
@@ -269,6 +278,8 @@
         const results = document.getElementById('results');
         const categoriesContainer = document.getElementById('categoriesContainer');
         const totalQuantity = document.getElementById('totalQuantity');
+        const accessoriesContainer = document.getElementById('accessoriesContainer');
+        const accessoriesTotalQuantity = document.getElementById('accessoriesTotalQuantity');
         const debugSection = document.getElementById('debugSection');
         const debugContent = document.getElementById('debugContent');
 
@@ -444,7 +455,7 @@
                 const columns = Object.keys(firstRow);
                 addDebug(`🔤 欄位: ${columns.join(', ')}`);
 
-                // 找出 product_code 和 Quantity 欄位
+                // 找出 product_code、Quantity 和 amt 欄位
                 const codeKey = columns.find(key => 
                     key.toLowerCase().includes('product') && key.toLowerCase().includes('code') ||
                     key.toLowerCase() === 'code' ||
@@ -455,8 +466,12 @@
                     key.toLowerCase().includes('數量') || 
                     key.toLowerCase().includes('qty')
                 );
+                const amtKey = columns.find(key => 
+                    key.toLowerCase() === 'amt' || 
+                    key.toLowerCase().includes('amount')
+                );
 
-                addDebug(`🔑 使用的欄位: product_code="${codeKey}", Quantity="${quantityKey}"`);
+                addDebug(`🔑 使用的欄位: product_code="${codeKey}", Quantity="${quantityKey}", amt="${amtKey}"`);
 
                 if (!codeKey) {
                     showError('找不到 "product_code" 或 "Code" 欄位');
@@ -464,14 +479,25 @@
                     return;
                 }
 
-                if (!quantityKey) {
-                    showError('找不到 "Quantity" 欄位');
-                    addDebug('❌ 找不到數量欄位');
+                if (!quantityKey && !amtKey) {
+                    showError('找不到 "Quantity" 或 "amt" 欄位');
+                    addDebug('❌ 找不到數量或金額欄位');
                     return;
                 }
 
+                // 定義產品業績分類順序
+                const productCategories = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'AirPods', 'Care'];
+                // 定義周邊業績分類（不包含 AirPods，因為已在產品業績中）
+                const accessoryCategories = ['3rd Party', 'Accy', 'Audio'];
+
                 // 初始化分類統計
                 const categoryStats = {};
+                const accessoryStats = {};
+                
+                // 初始化所有分類（包括 0 的也要顯示）
+                productCategories.forEach(cat => categoryStats[cat] = 0);
+                accessoryCategories.forEach(cat => accessoryStats[cat] = 0);
+
                 let matchedCount = 0;
                 let unmatchedCount = 0;
                 const unmatchedCodes = [];
@@ -480,6 +506,7 @@
                 jsonData.forEach((row, index) => {
                     const productCode = String(row[codeKey] || '').trim();
                     const quantity = parseFloat(row[quantityKey]) || 0;
+                    const amt = parseFloat(row[amtKey]) || 0;
 
                     if (!productCode) {
                         return;
@@ -489,14 +516,17 @@
                     const category = codeCategoryMap[productCode];
 
                     if (category) {
-                        if (!categoryStats[category]) {
-                            categoryStats[category] = 0;
-                        }
-                        categoryStats[category] += quantity;
                         matchedCount++;
                         
+                        // 判斷是產品業績還是周邊業績
+                        if (productCategories.includes(category)) {
+                            categoryStats[category] += amt;
+                        } else if (accessoryCategories.includes(category)) {
+                            accessoryStats[category] += amt;
+                        }
+                        
                         if (index < 5) {
-                            addDebug(`✓ 第 ${index + 1} 筆: ${productCode} → ${category} (數量: ${quantity})`);
+                            addDebug(`✓ 第 ${index + 1} 筆: ${productCode} → ${category} (數量: ${quantity}, 金額: ${amt})`);
                         }
                     } else {
                         unmatchedCount++;
@@ -518,7 +548,7 @@
                     addDebug(`\n未匹配的產品代碼: ${unmatchedCodes.join(', ')}`);
                 }
 
-                displayResults(categoryStats);
+                displayResults(categoryStats, accessoryStats, productCategories, accessoryCategories);
             } catch (err) {
                 showError('處理資料時發生錯誤: ' + err.message);
                 addDebug(`❌ 錯誤: ${err.message}`);
@@ -526,34 +556,63 @@
             }
         }
 
-        function displayResults(stats) {
+        function displayResults(productStats, accessoryStats, productCategories, accessoryCategories) {
+            // 顯示產品業績
             categoriesContainer.innerHTML = '';
-            let total = 0;
+            let productTotal = 0;
 
-            // 排序分類（按數量由大到小）
-            const sortedCategories = Object.entries(stats).sort((a, b) => b[1] - a[1]);
-
-            // 顯示各分類
-            sortedCategories.forEach(([category, quantity]) => {
-                total += quantity;
+            // 按指定順序顯示產品業績
+            productCategories.forEach(category => {
+                const amount = productStats[category] || 0;
+                productTotal += amount;
+                
                 const card = document.createElement('div');
                 card.className = 'category-card';
                 card.innerHTML = `
                     <div class="category-name">${category}</div>
-                    <div class="category-quantity">${Math.round(quantity).toLocaleString()}</div>
+                    <div class="category-quantity">$${Math.round(amount).toLocaleString()}</div>
                 `;
                 categoriesContainer.appendChild(card);
             });
 
-            // 顯示總計
-            totalQuantity.textContent = Math.round(total).toLocaleString();
+            // 顯示產品業績總計
+            totalQuantity.textContent = `$${Math.round(productTotal).toLocaleString()}`;
+
+            // 顯示周邊業績
+            accessoriesContainer.innerHTML = '';
+            let accessoryTotal = 0;
+
+            // 按指定順序顯示周邊業績
+            accessoryCategories.forEach(category => {
+                const amount = accessoryStats[category] || 0;
+                accessoryTotal += amount;
+                
+                const card = document.createElement('div');
+                card.className = 'category-card';
+                card.innerHTML = `
+                    <div class="category-name">${category}</div>
+                    <div class="category-quantity">$${Math.round(amount).toLocaleString()}</div>
+                `;
+                accessoriesContainer.appendChild(card);
+            });
+
+            // 顯示周邊業績總計
+            accessoriesTotalQuantity.textContent = `$${Math.round(accessoryTotal).toLocaleString()}`;
+
             results.classList.add('show');
 
-            addDebug(`\n📊 各分類統計:`);
-            sortedCategories.forEach(([category, quantity]) => {
-                addDebug(`${category}: ${Math.round(quantity).toLocaleString()}`);
+            // 除錯資訊
+            addDebug(`\n📊 產品業績統計:`);
+            productCategories.forEach(category => {
+                addDebug(`${category}: $${Math.round(productStats[category] || 0).toLocaleString()}`);
             });
-            addDebug(`\n總計: ${Math.round(total).toLocaleString()}`);
+            addDebug(`產品業績總計: $${Math.round(productTotal).toLocaleString()}`);
+
+            addDebug(`\n🛍️ 周邊業績統計:`);
+            accessoryCategories.forEach(category => {
+                addDebug(`${category}: $${Math.round(accessoryStats[category] || 0).toLocaleString()}`);
+            });
+            addDebug(`周邊業績總計: $${Math.round(accessoryTotal).toLocaleString()}`);
         }
 
         function showError(message) {
