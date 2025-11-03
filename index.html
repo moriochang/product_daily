@@ -1,0 +1,566 @@
+<!DOCTYPE html>
+<html lang="zh-TW">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>產品分類統計工具</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            max-width: 1000px;
+            margin: 0 auto;
+            background: white;
+            border-radius: 20px;
+            padding: 40px;
+            box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+        }
+
+        h1 {
+            color: #333;
+            margin-bottom: 10px;
+            text-align: center;
+            font-size: 28px;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 30px;
+            font-size: 14px;
+        }
+
+        .loading {
+            text-align: center;
+            padding: 30px;
+            color: #667eea;
+            font-size: 16px;
+        }
+
+        .upload-area {
+            border: 3px dashed #667eea;
+            border-radius: 15px;
+            padding: 40px;
+            text-align: center;
+            margin-bottom: 30px;
+            cursor: pointer;
+            transition: all 0.3s;
+            background: #f8f9ff;
+            display: none;
+        }
+
+        .upload-area.show {
+            display: block;
+        }
+
+        .upload-area:hover {
+            border-color: #764ba2;
+            background: #f0f2ff;
+        }
+
+        .upload-area.dragover {
+            border-color: #764ba2;
+            background: #e8ebff;
+            transform: scale(1.02);
+        }
+
+        .upload-icon {
+            font-size: 48px;
+            margin-bottom: 15px;
+        }
+
+        .upload-text {
+            font-size: 16px;
+            color: #666;
+            margin-bottom: 10px;
+        }
+
+        input[type="file"] {
+            display: none;
+        }
+
+        .file-name {
+            margin-top: 15px;
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        .error {
+            color: #f5576c;
+            padding: 15px;
+            background: #ffe8eb;
+            border-radius: 8px;
+            margin-top: 15px;
+            display: none;
+        }
+
+        .error.show {
+            display: block;
+        }
+
+        .results {
+            display: none;
+            margin-top: 30px;
+        }
+
+        .results.show {
+            display: block;
+        }
+
+        .stats-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 15px;
+            margin-bottom: 20px;
+        }
+
+        .category-card {
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            padding: 20px;
+            border-radius: 12px;
+            box-shadow: 0 4px 15px rgba(102, 126, 234, 0.3);
+        }
+
+        .category-name {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 10px;
+        }
+
+        .category-quantity {
+            font-size: 32px;
+            font-weight: bold;
+        }
+
+        .total-card {
+            background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%);
+            color: white;
+            padding: 25px;
+            border-radius: 12px;
+            margin-top: 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            box-shadow: 0 4px 15px rgba(245, 87, 108, 0.3);
+        }
+
+        .debug-section {
+            margin-top: 30px;
+            padding: 20px;
+            background: #f5f5f5;
+            border-radius: 12px;
+        }
+
+        .debug-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+        }
+
+        .debug-content {
+            font-family: monospace;
+            font-size: 12px;
+            color: #666;
+            max-height: 300px;
+            overflow-y: auto;
+            white-space: pre-wrap;
+        }
+
+        .config-section {
+            background: #f0f2ff;
+            padding: 20px;
+            border-radius: 12px;
+            margin-bottom: 20px;
+        }
+
+        .config-label {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 14px;
+        }
+
+        .config-input {
+            width: 100%;
+            padding: 10px;
+            border: 2px solid #667eea;
+            border-radius: 8px;
+            font-size: 14px;
+            font-family: monospace;
+        }
+
+        .config-hint {
+            font-size: 12px;
+            color: #666;
+            margin-top: 5px;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>📊 產品分類統計工具</h1>
+        <div class="subtitle">從 GitHub 載入參照資料</div>
+        
+        <div class="config-section">
+            <div class="config-label">GitHub 參照資料網址：</div>
+            <input type="text" 
+                   class="config-input" 
+                   id="githubUrl" 
+                   value="https://raw.githubusercontent.com/moriochang/product_daily/main/data/20251101_參照資料.xlsx"
+                   placeholder="輸入 GitHub Raw URL">
+            <div class="config-hint">
+                💡 上傳參照資料.xlsx 到 GitHub，然後點擊檔案 → Raw，複製網址貼到這裡
+            </div>
+        </div>
+
+        <div class="loading" id="loading">⏳ 正在載入參照資料...</div>
+        
+        <div class="upload-area" id="uploadArea">
+            <div class="upload-icon">📁</div>
+            <div class="upload-text">點擊上傳或拖曳 Excel 檔案到這裡</div>
+            <div class="upload-text" style="font-size: 14px; color: #999;">支援 .xlsx, .xls, .csv 格式</div>
+            <div class="upload-text" style="font-size: 12px; color: #999; margin-top: 10px;">
+                需包含 product_code 和 Quantity 欄位
+            </div>
+            <input type="file" id="fileInput" accept=".xlsx,.xls,.csv">
+        </div>
+
+        <div class="file-name" id="fileName"></div>
+        <div class="error" id="error"></div>
+
+        <div class="results" id="results">
+            <h2 style="margin-bottom: 20px; color: #333;">📈 統計結果</h2>
+            <div class="stats-grid" id="categoriesContainer"></div>
+            <div class="total-card">
+                <div class="category-name">總計</div>
+                <div class="category-quantity" id="totalQuantity">0</div>
+            </div>
+        </div>
+
+        <div class="debug-section" id="debugSection">
+            <div class="debug-title">🔍 除錯資訊</div>
+            <div class="debug-content" id="debugContent"></div>
+        </div>
+    </div>
+
+    <script>
+        let codeCategoryMap = null;
+        let debugMessages = [];
+
+        const githubUrl = document.getElementById('githubUrl');
+        const loading = document.getElementById('loading');
+        const uploadArea = document.getElementById('uploadArea');
+        const fileInput = document.getElementById('fileInput');
+        const fileName = document.getElementById('fileName');
+        const error = document.getElementById('error');
+        const results = document.getElementById('results');
+        const categoriesContainer = document.getElementById('categoriesContainer');
+        const totalQuantity = document.getElementById('totalQuantity');
+        const debugSection = document.getElementById('debugSection');
+        const debugContent = document.getElementById('debugContent');
+
+        function addDebug(message) {
+            debugMessages.push(message);
+            debugContent.textContent = debugMessages.join('\n');
+        }
+
+        // 載入參照資料
+        async function loadCategoryMap() {
+            const url = githubUrl.value.trim();
+            
+            if (!url || url.includes('YOUR_USERNAME')) {
+                loading.textContent = '⚠️ 請先設定 GitHub 參照資料網址';
+                addDebug('❌ 請在上方輸入框設定 GitHub Raw URL');
+                return;
+            }
+
+            loading.style.display = 'block';
+            loading.textContent = '⏳ 正在從 GitHub 載入參照資料...';
+            addDebug(`🔄 開始載入參照資料...`);
+            addDebug(`📍 URL: ${url}`);
+            
+            try {
+                // 從 GitHub 下載 Excel 檔案
+                const response = await fetch(url);
+                
+                if (!response.ok) {
+                    throw new Error(`HTTP ${response.status}: ${response.statusText}`);
+                }
+                
+                const arrayBuffer = await response.arrayBuffer();
+                addDebug(`✓ 下載完成: ${(arrayBuffer.byteLength / 1024).toFixed(2)} KB`);
+                
+                // 讀取 Excel
+                const workbook = XLSX.read(arrayBuffer, { type: 'array' });
+                const sheet = workbook.Sheets[workbook.SheetNames[0]];
+                const data = XLSX.utils.sheet_to_json(sheet);
+                
+                // 建立對應表
+                codeCategoryMap = {};
+                data.forEach(row => {
+                    const code = String(row.Code || '').trim();
+                    const category = String(row['大分類'] || '').trim();
+                    if (code && category) {
+                        codeCategoryMap[code] = category;
+                    }
+                });
+                
+                addDebug(`✅ 參照資料載入完成: ${Object.keys(codeCategoryMap).length.toLocaleString()} 個產品代碼`);
+                const categories = [...new Set(Object.values(codeCategoryMap))];
+                addDebug(`📂 大分類: ${categories.join(', ')}`);
+                
+                loading.style.display = 'none';
+                uploadArea.classList.add('show');
+                
+                // 儲存 URL 到 localStorage
+                localStorage.setItem('githubUrl', url);
+            } catch (err) {
+                addDebug(`❌ 載入失敗: ${err.message}`);
+                loading.textContent = '❌ 參照資料載入失敗';
+                showError('參照資料載入失敗: ' + err.message + '\n\n請確認：\n1. GitHub URL 正確\n2. 使用 Raw URL（不是網頁 URL）\n3. 檔案可以公開存取');
+            }
+        }
+
+        // 從 localStorage 讀取上次使用的 URL
+        const savedUrl = localStorage.getItem('githubUrl');
+        if (savedUrl) {
+            githubUrl.value = savedUrl;
+        }
+
+        // URL 輸入框變更時重新載入
+        githubUrl.addEventListener('change', loadCategoryMap);
+        githubUrl.addEventListener('blur', loadCategoryMap);
+
+        // 頁面載入後執行
+        window.addEventListener('load', loadCategoryMap);
+
+        // 點擊上傳區域
+        uploadArea.addEventListener('click', () => {
+            if (!codeCategoryMap) {
+                showError('參照資料尚未載入完成');
+                return;
+            }
+            fileInput.click();
+        });
+
+        // 拖曳功能
+        uploadArea.addEventListener('dragover', (e) => {
+            e.preventDefault();
+            uploadArea.classList.add('dragover');
+        });
+
+        uploadArea.addEventListener('dragleave', () => {
+            uploadArea.classList.remove('dragover');
+        });
+
+        uploadArea.addEventListener('drop', (e) => {
+            e.preventDefault();
+            uploadArea.classList.remove('dragover');
+            if (!codeCategoryMap) {
+                showError('參照資料尚未載入完成');
+                return;
+            }
+            const files = e.dataTransfer.files;
+            if (files.length > 0) {
+                handleFile(files[0]);
+            }
+        });
+
+        // 檔案選擇
+        fileInput.addEventListener('change', (e) => {
+            if (e.target.files.length > 0) {
+                handleFile(e.target.files[0]);
+            }
+        });
+
+        function handleFile(file) {
+            if (!codeCategoryMap) {
+                showError('參照資料尚未載入完成');
+                return;
+            }
+
+            // 檢查檔案類型
+            if (!file.name.match(/\.(xlsx|xls|csv)$/)) {
+                showError('請上傳 Excel 或 CSV 檔案 (.xlsx, .xls 或 .csv)');
+                return;
+            }
+
+            fileName.textContent = `已選擇檔案: ${file.name}`;
+            error.classList.remove('show');
+
+            addDebug(`\n📁 檔案名稱: ${file.name}`);
+            addDebug(`📦 檔案大小: ${(file.size / 1024).toFixed(2)} KB`);
+
+            // 讀取檔案
+            const reader = new FileReader();
+            reader.onload = (e) => {
+                try {
+                    const data = new Uint8Array(e.target.result);
+                    const workbook = XLSX.read(data, { 
+                        type: 'array',
+                        codepage: 65001
+                    });
+                    processExcel(workbook);
+                } catch (err) {
+                    showError('讀取檔案時發生錯誤: ' + err.message);
+                    addDebug(`❌ 錯誤: ${err.message}`);
+                }
+            };
+            reader.readAsArrayBuffer(file);
+        }
+
+        function processExcel(workbook) {
+            try {
+                // 取得第一個工作表
+                const firstSheet = workbook.Sheets[workbook.SheetNames[0]];
+                const jsonData = XLSX.utils.sheet_to_json(firstSheet, {
+                    raw: false,
+                    defval: ''
+                });
+
+                if (jsonData.length === 0) {
+                    showError('Excel 檔案是空的');
+                    return;
+                }
+
+                addDebug(`📋 工作表名稱: ${workbook.SheetNames[0]}`);
+                addDebug(`📊 資料筆數: ${jsonData.length}`);
+
+                // 找出正確的欄位名稱
+                const firstRow = jsonData[0];
+                const columns = Object.keys(firstRow);
+                addDebug(`🔤 欄位: ${columns.join(', ')}`);
+
+                // 找出 product_code 和 Quantity 欄位
+                const codeKey = columns.find(key => 
+                    key.toLowerCase().includes('product') && key.toLowerCase().includes('code') ||
+                    key.toLowerCase() === 'code' ||
+                    key.toLowerCase() === 'product_code'
+                );
+                const quantityKey = columns.find(key => 
+                    key.toLowerCase().includes('quantity') || 
+                    key.toLowerCase().includes('數量') || 
+                    key.toLowerCase().includes('qty')
+                );
+
+                addDebug(`🔑 使用的欄位: product_code="${codeKey}", Quantity="${quantityKey}"`);
+
+                if (!codeKey) {
+                    showError('找不到 "product_code" 或 "Code" 欄位');
+                    addDebug('❌ 找不到產品代碼欄位');
+                    return;
+                }
+
+                if (!quantityKey) {
+                    showError('找不到 "Quantity" 欄位');
+                    addDebug('❌ 找不到數量欄位');
+                    return;
+                }
+
+                // 初始化分類統計
+                const categoryStats = {};
+                let matchedCount = 0;
+                let unmatchedCount = 0;
+                const unmatchedCodes = [];
+
+                // 處理每一筆資料
+                jsonData.forEach((row, index) => {
+                    const productCode = String(row[codeKey] || '').trim();
+                    const quantity = parseFloat(row[quantityKey]) || 0;
+
+                    if (!productCode) {
+                        return;
+                    }
+
+                    // 查找對應的大分類
+                    const category = codeCategoryMap[productCode];
+
+                    if (category) {
+                        if (!categoryStats[category]) {
+                            categoryStats[category] = 0;
+                        }
+                        categoryStats[category] += quantity;
+                        matchedCount++;
+                        
+                        if (index < 5) {
+                            addDebug(`✓ 第 ${index + 1} 筆: ${productCode} → ${category} (數量: ${quantity})`);
+                        }
+                    } else {
+                        unmatchedCount++;
+                        if (unmatchedCodes.length < 10) {
+                            unmatchedCodes.push(productCode);
+                        }
+                        
+                        if (index < 5) {
+                            addDebug(`✗ 第 ${index + 1} 筆: ${productCode} 找不到對應分類`);
+                        }
+                    }
+                });
+
+                addDebug(`\n📈 統計結果:`);
+                addDebug(`✅ 成功匹配: ${matchedCount} 筆`);
+                addDebug(`❌ 未匹配: ${unmatchedCount} 筆`);
+
+                if (unmatchedCodes.length > 0) {
+                    addDebug(`\n未匹配的產品代碼: ${unmatchedCodes.join(', ')}`);
+                }
+
+                displayResults(categoryStats);
+            } catch (err) {
+                showError('處理資料時發生錯誤: ' + err.message);
+                addDebug(`❌ 錯誤: ${err.message}`);
+                console.error(err);
+            }
+        }
+
+        function displayResults(stats) {
+            categoriesContainer.innerHTML = '';
+            let total = 0;
+
+            // 排序分類（按數量由大到小）
+            const sortedCategories = Object.entries(stats).sort((a, b) => b[1] - a[1]);
+
+            // 顯示各分類
+            sortedCategories.forEach(([category, quantity]) => {
+                total += quantity;
+                const card = document.createElement('div');
+                card.className = 'category-card';
+                card.innerHTML = `
+                    <div class="category-name">${category}</div>
+                    <div class="category-quantity">${Math.round(quantity).toLocaleString()}</div>
+                `;
+                categoriesContainer.appendChild(card);
+            });
+
+            // 顯示總計
+            totalQuantity.textContent = Math.round(total).toLocaleString();
+            results.classList.add('show');
+
+            addDebug(`\n📊 各分類統計:`);
+            sortedCategories.forEach(([category, quantity]) => {
+                addDebug(`${category}: ${Math.round(quantity).toLocaleString()}`);
+            });
+            addDebug(`\n總計: ${Math.round(total).toLocaleString()}`);
+        }
+
+        function showError(message) {
+            error.textContent = message;
+            error.classList.add('show');
+            results.classList.remove('show');
+        }
+    </script>
+</body>
+</html>
