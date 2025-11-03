@@ -3,7 +3,7 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>產品分類統計工具</title>
+    <title>每日業績統計</title>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/xlsx/0.18.5/xlsx.full.min.js"></script>
     <style>
         * {
@@ -14,8 +14,8 @@
 
         body {
             font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Arial, sans-serif;
-            /* 🎯 配色優化: 變更背景漸變色為更現代的藍色 */
-            background: linear-gradient(135deg, #004466 0%, #006699 100%); 
+            /* 🎯 加深背景顏色 */
+            background: linear-gradient(135deg, #102040 0%, #1a3560 100%);
             min-height: 100vh;
             padding: 20px;
         }
@@ -29,28 +29,22 @@
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
         }
 
-        h1, h2 {
-            /* 🎯 配色優化: 主要標題顏色 */
-            color: #1a5276; 
+        h1 {
+            color: #1e3c72;
             margin-bottom: 30px;
             text-align: center;
             font-size: 28px;
         }
 
-        h2 {
-            text-align: left;
-        }
-
         .loading {
             text-align: center;
             padding: 30px;
-            color: #0077aa;
+            color: #2a5298;
             font-size: 16px;
         }
 
         .upload-area {
-            /* 🎯 配色優化: 邊框顏色 */
-            border: 3px dashed #0077aa;
+            border: 3px dashed #2a5298;
             border-radius: 15px;
             padding: 40px;
             text-align: center;
@@ -66,12 +60,12 @@
         }
 
         .upload-area:hover {
-            border-color: #1a5276;
+            border-color: #1e3c72;
             background: #e8eef5;
         }
 
         .upload-area.dragover {
-            border-color: #1a5276;
+            border-color: #1e3c72;
             background: #dce6f0;
             transform: scale(1.02);
         }
@@ -93,15 +87,14 @@
 
         .file-name {
             margin-top: 15px;
-            color: #0077aa;
+            color: #2a5298;
             font-weight: bold;
         }
 
         .error {
-            /* 🎯 配色優化: 錯誤顏色略微柔和 */
-            color: #e74c3c;
+            color: #dc3545;
             padding: 15px;
-            background: #fbe6e4;
+            background: #ffe8eb;
             border-radius: 8px;
             margin-top: 15px;
             display: none;
@@ -127,19 +120,12 @@
             margin-bottom: 20px;
         }
 
-        /* 🎯 配色優化: 產品卡片 (Product Cards) - 保持新的海軍藍 */
         .category-card {
-            background: linear-gradient(135deg, #1a5276 0%, #2980b9 100%);
+            background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             color: white;
             padding: 20px;
             border-radius: 12px;
             box-shadow: 0 4px 15px rgba(30, 60, 114, 0.3);
-        }
-        
-        /* 🎯 配色優化: 周邊卡片 (Accessory Cards) - 使用新的青色/湖水綠輔色 */
-        .accessory-card {
-            background: linear-gradient(135deg, #00a08e 0%, #00c7b7 100%);
-            box-shadow: 0 4px 15px rgba(0, 160, 142, 0.3);
         }
 
         .category-name {
@@ -160,21 +146,8 @@
         }
 
         /* 增大 "周邊業績總計" 的文字大小 */
-        .total-card {
-            /* 🎯 配色優化: 總計卡片使用青色/湖水綠輔色 */
-            background: linear-gradient(135deg, #00a08e 0%, #00c7b7 100%) !important; 
-            box-shadow: 0 4px 15px rgba(0, 160, 142, 0.3);
-            color: white; 
-            padding: 25px; 
-            border-radius: 12px; 
-            margin-top: 20px; 
-            display: flex; 
-            justify-content: space-between; 
-            align-items: center; 
-        }
-
         .total-card > .category-name {
-            font-size: 24px;
+            font-size: 24px; /* 增大文字字體 */
             font-weight: bold;
             margin-bottom: 0;
         }
@@ -220,8 +193,7 @@
         .config-input {
             width: 100%;
             padding: 10px;
-            /* 🎯 配色優化: 輸入框邊框顏色 */
-            border: 2px solid #0077aa;
+            border: 2px solid #2a5298;
             border-radius: 8px;
             font-size: 14px;
             font-family: monospace;
@@ -237,7 +209,7 @@
         .top3-container {
             margin-top: 40px;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); /* 使用 Grid 排版 */
             gap: 20px;
         }
 
@@ -256,12 +228,11 @@
         }
 
         .top3-category-title {
-            /* 🎯 配色優化: Top 3 標題顏色 */
-            color: #1a5276;
+            color: #1e3c72;
             font-size: 20px;
             font-weight: bold;
             margin-bottom: 15px;
-            border-bottom: 3px solid #f0f4f8;
+            border-bottom: 3px solid #f0f4f8; /* 淺色分隔線 */
             padding-bottom: 8px;
         }
 
@@ -274,10 +245,9 @@
             font-size: 16px;
         }
 
-        /* 排名顏色保持不變，因為這組顏色已經夠明確 */
-        .top3-item:nth-child(2) .top3-rank { color: #FFD700; } 
-        .top3-item:nth-child(3) .top3-rank { color: #C0C0C0; }
-        .top3-item:nth-child(4) .top3-rank { color: #CD7F32; }
+        .top3-item:nth-child(2) .top3-rank { color: #FFD700; /* 金色 */ }
+        .top3-item:nth-child(3) .top3-rank { color: #C0C0C0; /* 銀色 */ }
+        .top3-item:nth-child(4) .top3-rank { color: #CD7F32; /* 銅色 */ }
 
         .top3-item:last-child {
             border-bottom: none;
@@ -288,7 +258,7 @@
             font-size: 1.2em;
             width: 30px;
             text-align: left;
-            color: #0077aa; /* 🎯 配色優化: 排名數字顏色 */
+            color: #2a5298;
         }
 
         .top3-name {
@@ -298,10 +268,8 @@
 
         .top3-quantity {
             font-weight: bold;
-            /* 🎯 配色優化: 數量文字顏色 (柔和的紅) */
-            color: #e74c3c; 
-            /* 🎯 配色優化: 數量背景顏色 (柔和的淺紅) */
-            background-color: #fbe6e4; 
+            color: #dc3545;
+            background-color: #ffe8eb;
             padding: 4px 8px;
             border-radius: 5px;
         }
@@ -318,7 +286,7 @@
 </head>
 <body>
     <div class="container">
-        <h1>📊 產品分類統計工具</h1>
+        <h1>📊 每日業績統計</h1>
         
         <div class="config-section">
             <div class="config-label">GitHub 參照資料網址：</div>
@@ -348,17 +316,17 @@
         <div class="error" id="error"></div>
 
         <div class="results" id="results">
-            <h2 style="margin-bottom: 20px; color: #1a5276;">📦 產品數量統計</h2>
+            <h2 style="margin-bottom: 20px; color: #1e3c72;">📦 產品數量統計</h2>
             <div class="stats-grid" id="categoriesContainer"></div>
 
-            <h2 style="margin-bottom: 20px; margin-top: 40px; color: #1a5276;">🔌 周邊業績統計</h2>
+            <h2 style="margin-bottom: 20px; margin-top: 40px; color: #1e3c72;">🔌 周邊業績統計</h2>
             <div class="stats-grid" id="accessoriesContainer"></div>
-            <div class="total-card">
+            <div class="total-card" style="background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%); color: white; padding: 25px; border-radius: 12px; margin-top: 20px; display: flex; justify-content: space-between; align-items: center; box-shadow: 0 4px 15px rgba(30, 60, 114, 0.3);">
                 <div class="category-name">周邊業績總計</div> 
                 <div id="accessoriesTotalQuantity">$0</div>
             </div>
 
-            <h2 style="margin-bottom: 20px; margin-top: 40px; color: #1a5276;">🏆 各分類 Top 3</h2>
+            <h2 style="margin-bottom: 20px; margin-top: 40px; color: #1e3c72;">🏆 各分類 Top 3</h2>
             <div id="top3Container" class="top3-container"></div>
         </div>
 
@@ -371,7 +339,6 @@
     <footer class="footer">
         created by Morio © 2025
     </footer>
-
     <script>
         let codeCategoryMap = null; // { code: { category: '大分類', subCategory: '中分類' } }
         let debugMessages = [];
@@ -701,7 +668,6 @@
                 const quantity = productStats[category] || 0;
                 
                 const card = document.createElement('div');
-                // 產品卡片使用默認的 category-card 藍色樣式
                 card.className = 'category-card';
                 card.innerHTML = `
                     <div class="category-name">${category}</div>
@@ -718,8 +684,7 @@
                 accessoryTotal += amount;
                 
                 const card = document.createElement('div');
-                // 🎯 JS修改: 周邊卡片使用新的 accessory-card 樣式 (青色)
-                card.className = 'category-card accessory-card'; 
+                card.className = 'category-card';
                 card.innerHTML = `
                     <div class="category-name">${category}</div>
                     <div class="category-quantity">$${Math.round(amount).toLocaleString()}</div>
