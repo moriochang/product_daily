@@ -17,15 +17,18 @@
             background: linear-gradient(135deg, #1e3c72 0%, #2a5298 100%);
             min-height: 100vh;
             padding: 20px;
+            display: flex; /* 使用 Flexbox 讓 Footer 保持在最下方 */
+            flex-direction: column;
         }
 
         .container {
             max-width: 1000px;
-            margin: 0 auto;
+            margin: 0 auto 20px auto; /* 底部留出空間給 Footer */
             background: white;
             border-radius: 20px;
             padding: 40px;
             box-shadow: 0 20px 60px rgba(0,0,0,0.3);
+            flex-grow: 1; /* 讓容器佔據剩餘空間 */
         }
 
         h1 {
@@ -272,6 +275,15 @@
             padding: 4px 8px;
             border-radius: 5px;
         }
+
+        /* 🎯 新增 Footer 樣式 */
+        .footer {
+            margin-top: auto; /* 讓 Footer 緊貼底部 */
+            padding: 10px 0;
+            text-align: center;
+            color: rgba(255, 255, 255, 0.7); /* 淺白色文字，與背景融合 */
+            font-size: 14px;
+        }
     </style>
 </head>
 <body>
@@ -325,7 +337,10 @@
             <div class="debug-content" id="debugContent"></div>
         </div>
     </div>
-
+    
+    <footer class="footer">
+        Created by Morio © 2025
+    </footer>
     <script>
         let codeCategoryMap = null; // { code: { category: '大分類', subCategory: '中分類' } }
         let debugMessages = [];
@@ -618,7 +633,7 @@
             }
         }
 
-        // 【修改 4: 移除 renderTop3 函式中的 " Top 3" 文字】
+        // 移除 renderTop3 函式中的 " Top 3" 文字
         function renderTop3(category, stats) {
             const items = Object.entries(stats)
                 .map(([name, quantity]) => ({ name, quantity }))
