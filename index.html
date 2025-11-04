@@ -550,11 +550,11 @@
                     return;
                 }
 
-                // 🎯 核心產品數量統計 (新增 AirPods)
-                const productCategories = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'AirPods', 'Care']; 
-                // 🎯 周邊產品金額統計 (移除 AirPods)
-                const accessoryCategories = ['3rd Party', 'Accy', 'Audio']; 
-                // 🎯 Top 3 排名類別 (新增 AirPods)
+                // 🎯 核心產品數量統計 (移除 AirPods)
+                const productCategories = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'Care']; 
+                // 🎯 周邊產品金額統計 (新增 AirPods)
+                const accessoryCategories = ['3rd Party', 'Accy', 'Audio', 'AirPods']; 
+                // 🎯 Top 3 排名類別 (包含 AirPods)
                 const top3Categories = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'AirPods', 'Accy', '3rd Party']; 
 
                 const categoryStats = {};
@@ -585,10 +585,10 @@
                         const subCategory = categoryData.subCategory;
 
                         if (productCategories.includes(category)) {
-                            // 核心產品和 AirPods 計數量
+                            // 核心產品計數量
                             categoryStats[category] += quantity;
                         } else if (accessoryCategories.includes(category)) {
-                            // 周邊產品計金額 (不含 AirPods)
+                            // 周邊產品和 AirPods 計金額
                             accessoryStats[category] += amt;
                         }
 
@@ -667,7 +667,7 @@
         function displayResults(productStats, accessoryStats, subCategoryStats, productCategories, accessoryCategories, top3Categories) {
             categoriesContainer.innerHTML = '';
 
-            // 渲染產品數量統計 (包含 AirPods)
+            // 渲染產品數量統計 (不含 AirPods)
             productCategories.forEach(category => {
                 const quantity = productStats[category] || 0;
                 
@@ -683,7 +683,7 @@
             accessoriesContainer.innerHTML = '';
             let accessoryTotal = 0;
 
-            // 渲染周邊業績統計 (不含 AirPods)
+            // 渲染周邊業績統計 (包含 AirPods)
             accessoryCategories.forEach(category => {
                 const amount = accessoryStats[category] || 0;
                 accessoryTotal += amount;
