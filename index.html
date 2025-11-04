@@ -550,11 +550,11 @@
                     return;
                 }
 
-                // 🎯 核心產品數量統計 (移除 AirPods)
-                const productCategories = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'Care']; 
-                // 🎯 周邊產品金額統計 (新增 AirPods)
+                // 核心產品數量統計 (包含 AirPods)
+                const productCategories = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'AirPods', 'Care']; 
+                // 🎯 周邊產品金額統計 (現在包含 AirPods)
                 const accessoryCategories = ['3rd Party', 'Accy', 'Audio', 'AirPods']; 
-                // 🎯 Top 3 排名類別 (包含 AirPods)
+                // Top 3 排名類別 (包含 AirPods)
                 const top3Categories = ['CPU', 'iPad', 'iPhone', 'Apple Watch', 'AirPods', 'Accy', '3rd Party']; 
 
                 const categoryStats = {};
@@ -562,6 +562,7 @@
                 const subCategoryStats = {}; 
 
                 productCategories.forEach(cat => categoryStats[cat] = 0);
+                // 🎯 初始化時包含 AirPods
                 accessoryCategories.forEach(cat => accessoryStats[cat] = 0);
 
                 let matchedCount = 0;
@@ -584,15 +585,17 @@
                         const category = categoryData.category;
                         const subCategory = categoryData.subCategory;
 
+                        // 1. 產品數量統計 (AirPods 計數量)
                         if (productCategories.includes(category)) {
-                            // 核心產品計數量
                             categoryStats[category] += quantity;
-                        } else if (accessoryCategories.includes(category)) {
-                            // 周邊產品和 AirPods 計金額
+                        }
+
+                        // 2. 🎯 周邊業績統計 (AirPods 計金額，並與周邊產品一起統計)
+                        if (accessoryCategories.includes(category)) {
                             accessoryStats[category] += amt;
                         }
 
-                        // Top 3 中分類 Quantity 統計邏輯
+                        // 3. Top 3 中分類 Quantity 統計邏輯
                         if (top3Categories.includes(category)) {
                             if (!subCategoryStats[category]) {
                                 subCategoryStats[category] = {};
@@ -667,7 +670,7 @@
         function displayResults(productStats, accessoryStats, subCategoryStats, productCategories, accessoryCategories, top3Categories) {
             categoriesContainer.innerHTML = '';
 
-            // 渲染產品數量統計 (不含 AirPods)
+            // 渲染產品數量統計 (包含 AirPods)
             productCategories.forEach(category => {
                 const quantity = productStats[category] || 0;
                 
@@ -720,9 +723,9 @@
 
             addDebug(`\n🔌 周邊業績統計:`);
             accessoryCategories.forEach(category => {
-                addDebug(`${category}: ${Math.round(accessoryStats[category] || 0).toLocaleString()}`);
+                addDebug(`${category}: $${Math.round(accessoryStats[category] || 0).toLocaleString()}`);
             });
-            addDebug(`周邊業績總計: ${Math.round(accessoryTotal).toLocaleString()}`);
+            addDebug(`周邊業績總計: $${Math.round(accessoryTotal).toLocaleString()}`);
             
             addDebug(`\n🏆 各分類 Top 3 統計:`);
             top3Categories.forEach(category => {
